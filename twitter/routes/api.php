@@ -45,7 +45,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
 
     Route::post('/posts/{post}/like', [LikeController::class, 'store']);
-    Route::delete('/posts/{post}/like', [LikeController::class, 'destroy']);
+    //Route::delete('/posts/{post}/like', [LikeController::class, 'destroy']);
 
     Route::get('/admin/stats/hn-tags', [AdminExternalStatsController::class, 'hnPopularKeywords']);
     Route::get('/admin/stats/guardian-tags', [AdminExternalStatsController::class, 'guardianPopularTags']);

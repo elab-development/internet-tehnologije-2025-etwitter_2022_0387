@@ -10,7 +10,20 @@ class LikeController extends Controller
 {
     public function store(Post $post)
     {
-        Like::firstOrCreate([
+        $like = Like::where('user_id', auth()->id())
+                ->where('post_id', $post->id)
+                ->first();
+
+    if ($like) {
+        // Ako postoji like ukloni ga
+        $like->delete();
+
+        return response()->json([
+            'message' => 'Lajk uklonjen'
+        ]);
+    } else {
+        // Ako ne postoji napravi novi
+        Like::create([
             'user_id' => auth()->id(),
             'post_id' => $post->id
         ]);
@@ -18,16 +31,5 @@ class LikeController extends Controller
         return response()->json([
             'message' => 'Post lajkovan'
         ], 201);
-    }
-
-    public function destroy(Post $post)
-    {
-        Like::where('user_id', auth()->id())
-            ->where('post_id', $post->id)
-            ->delete();
-
-        return response()->json([
-            'message' => 'Lajk uklonjen'
-        ]);
     }
 }
