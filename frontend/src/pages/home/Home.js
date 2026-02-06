@@ -3,10 +3,14 @@ import api from '../../api/axios';
 import TweetCard from '../../components/tweetcard/TweetCard';
 import './Home.css';
 
+
+
 function Home() {
     const [tweets, setTweets] = useState([]);
     const [content, setContent] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const limit = 280;
+    const isOverLimit = content.length > limit;
 
     const fetchPosts = async () => {
         setIsLoading(true);
@@ -47,19 +51,47 @@ function Home() {
             <div className="composer-section">
                 <textarea 
                     placeholder="Share your thoughts..." 
-                    className="post-input"
+                    className={`post-input ${isOverLimit ? 'input-error' : ''}`} // Dodajemo klasu za crveni okvir
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
+                    style={{
+                        borderColor: isOverLimit ? '#e02424' : '#ccc', // Direktno crvena boja ako pređe limit
+                        width: '100%',
+                        padding: '10px'
+                    }}
+                    // className="post-input"
+                    // value={content}
+                    // onChange={(e) => setContent(e.target.value)}
+                    // maxLength={280}
                 ></textarea>
-                <div className="composer-actions">
-                    <button 
-                        className="publish-btn" 
-                        onClick={handlePostSubmit}
-                        disabled={isLoading}
-                    >
-                        {isLoading ? 'Posting...' : 'Post it!'}
-                    </button>
-                </div>
+                <div className="composer-actions" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                    
+                    {/* CRVENA PORUKA KOJA SE POJAVLJUJE SAMO KAD PREĐE 280 */}
+                    {isOverLimit && (
+                        <span style={{ color: '#e02424', fontSize: '13px', marginBottom: '5px', fontWeight: 600 }}>
+                            ⚠️ Ne možete uneti više od 280 karaktera!
+                        </span>
+                    )}
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        {/* BROJAČ KOJI CRVENI */}
+                        <span style={{ color: isOverLimit ? '#e02424' : '#666' }}>
+                            {content.length} / {limit}
+                        </span>
+
+                        <button 
+                            className="publish-btn" 
+                            onClick={handlePostSubmit}
+                            disabled={isLoading || content.length === 0 || isOverLimit}
+                            style={{
+                                opacity: isOverLimit ? 0.5 : 1,
+                                cursor: isOverLimit ? 'not-allowed' : 'pointer'
+                            }}
+                        >
+                            {isLoading ? 'Posting...' : 'Post it!'}
+                        </button>
+                    </div>
+              </div>
             </div>
 
             <div className="main-feed">

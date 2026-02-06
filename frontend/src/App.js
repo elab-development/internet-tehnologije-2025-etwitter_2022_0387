@@ -7,6 +7,7 @@ import Profile from './pages/profile/Profile';
 import Signup from './pages/signup/Signup';
 import Navbar from './components/navbar/Navbar'
 
+
 function App() {
   return (
     <Router>

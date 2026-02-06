@@ -89,3 +89,8 @@
 .main-feed {
   background: var(--bg-light);
 }
+.input-error {
+    border: 2px solid #e02424 !important;
+    background-color: #fffafa; /* Blago crvenkasta pozadina */
+}
+

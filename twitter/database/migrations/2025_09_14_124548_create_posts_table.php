@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('posts', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade'); //dodato - povezuje post sa korisnikom
             $table->string('content', 280);
             $table->string('image_url')->nullable();
             $table->timestamps();
