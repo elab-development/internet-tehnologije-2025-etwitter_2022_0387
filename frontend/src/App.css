@@ -1,38 +1,41 @@
-.App {
-  text-align: center;
+:root {
+  /* Glavna plava i njene nijanse */
+  --brand-blue: #1d9bf0;
+  --brand-blue-hover: #1a8cd8;
+  --brand-blue-light: #e7f3ff; /* Za hover efekte i lagane pozadine */
+  
+  /* Pozadine */
+  --bg-light: #f7f9f9; /* Veoma svetlo plavkasto-siva */
+  --card-bg: #ffffff;
+  
+  /* Tekst i Bordere */
+  --text-main: #0f1419;
+  --text-muted: #536471;
+  --border-color: #eff3f4;
+  --error-red: #f4212e;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+body {
+  background-color: var(--bg-light);
+  color: var(--text-main);
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow-x: hidden;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.app-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  min-height: 100vh;
 }
 
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.main-content {
+  flex: 1;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  background-color: var(--card-bg); /* Sredina ostaje bela da bi odskočila od pozadine */
+  border-left: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+  min-height: 100vh;
 }

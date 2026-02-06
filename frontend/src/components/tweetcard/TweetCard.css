@@ -1,0 +1,71 @@
+.cyber-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  padding: 20px;
+  margin: 15px;
+  border-radius: 16px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  position: relative;
+  overflow: hidden;
+}
+
+.cyber-card:hover {
+  background: #ffffff;
+  transform: translateY(-2px);
+  border-color: var(--brand-blue-light);
+  box-shadow: 0 10px 20px rgba(29, 155, 240, 0.12), 
+              0 0 15px rgba(29, 155, 240, 0.05);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  margin-bottom: 10px;
+  color: var(--text-muted);
+}
+
+.user-id {
+  color: var(--text-main);
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.tweet-text {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--text-main);
+  margin: 10px 0;
+}
+
+.card-footer {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-between;
+  max-width: 100%;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color);
+}
+
+.action-btn {
+  background: rgba(29, 155, 240, 0);
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  padding: 6px 12px;
+  border-radius: 20px;
+}
+
+.action-btn:hover {
+  color: var(--brand-blue);
+  background: var(--brand-blue-light);
+}

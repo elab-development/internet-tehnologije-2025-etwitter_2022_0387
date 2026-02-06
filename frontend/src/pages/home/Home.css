@@ -1,0 +1,91 @@
+.feed-container {
+  display: flex;
+  flex-direction: column;
+  max-width: 600px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+.feed-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 2px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.feed-header h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 900;
+  background: linear-gradient(45deg, var(--brand-blue), #00d2ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Mala pulsirajuća tačka za "Live" osećaj */
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--brand-blue);
+  border-radius: 50%;
+  box-shadow: 0 0 0 rgba(29, 155, 240, 0.4);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(29, 155, 240, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(29, 155, 240, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(29, 155, 240, 0); }
+}
+
+.composer-section {
+  padding: 20px;
+  border-bottom: 8px solid var(--bg-light); /* Razdvaja input od feed-a kao na X-u */
+  background: #fff;
+}
+
+.post-input {
+  width: 100%;
+  min-height: 80px;
+  border: none;
+  font-family: inherit;
+  font-size: 1.2rem;
+  color: var(--text-main);
+  outline: none;
+  resize: none;
+}
+
+.composer-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 15px;
+}
+
+.publish-btn {
+  background: var(--brand-blue);
+  color: white;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 999px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.publish-btn:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 10px 20px rgba(29, 155, 240, 0.3);
+  background: var(--brand-blue-hover);
+}
+
+.main-feed {
+  background: var(--bg-light);
+}
