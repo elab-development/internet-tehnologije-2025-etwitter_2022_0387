@@ -1,6 +1,7 @@
 import './TweetCard.css';
 
-function TweetCard({ username, content, timestamp }) {
+function TweetCard({ username, content, timestamp, authorId, postId, onDelete }) {
+  const currentUserId = localStorage.getItem('user_id');
   return (
     <div className="cyber-card">
       <div className="card-header">
@@ -14,6 +15,15 @@ function TweetCard({ username, content, timestamp }) {
         <button className="action-btn">Like</button>
         <button className="action-btn">Reply</button>
         <button className="action-btn">Share</button>
+        {Number(currentUserId) === authorId && (
+          <button 
+            className="action-btn delete-btn" 
+            onClick={() => onDelete(postId)}
+            style={{ color: '#ff4d4d', fontWeight: 'bold', marginLeft: 'auto' }}
+          >
+            Delete
+          </button>
+        )}
       </div>
     </div>
   );

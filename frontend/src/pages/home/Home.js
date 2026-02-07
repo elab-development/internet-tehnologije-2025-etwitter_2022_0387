@@ -28,6 +28,18 @@ function Home() {
     useEffect(() => {
         fetchPosts();
     }, []);
+//Funkcija za brisanje tweeta
+    const handleDelete = async (postId) => {
+        if (window.confirm("Da li ste sigurni da želite da obrišete ovaj post?")) {
+            try {
+                await api.delete(`/posts/${postId}`);
+                setTweets(tweets.filter(t => t.id !== postId));
+            } catch (error) {
+                console.error("Greška pri brisanju:", error);
+                alert("Niste autorizovani da obrišete ovaj post.");
+            }
+        }
+    };
 
     const handlePostSubmit = async () => {
         if (!content.trim()) return;
@@ -99,6 +111,9 @@ function Home() {
                     tweets.map(tweet => (
                         <TweetCard 
                             key={tweet.id} 
+                            postId={tweet.id}       
+                            authorId={tweet.user_id} 
+                            onDelete={handleDelete}
                             username={tweet.user?.name || 'Korisnik'} 
                             content={tweet.content} 
                             timestamp={new Date(tweet.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
