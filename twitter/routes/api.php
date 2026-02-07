@@ -28,15 +28,24 @@ Route::get('/team', function () {
     });
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
-    return $request->user();
+    $user = $request->user();
+    
+    // Ručno dodajemo brojke u odgovor
+    $user->following_count = $user->following()->count();
+    $user->followers_count = $user->followers()->count();
+    
+    return $user;
 });
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+
 Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
+    Route::get('/users/search', [AuthController::class, 'searchUsers']);
+    
     Route::get('/follows', [FollowController::class, 'index']);
     Route::get('/users/{user}/followers', [FollowController::class, 'followers']);
     Route::get('/users/{user}/following', [FollowController::class, 'following']);

@@ -64,7 +64,8 @@ class PostController extends Controller
                     $q->where('user_id', (int) $userId);
                 }
             } else {
-                $followingIds = $auth->following()->pluck('users.id');
+                $followingIds = $auth->following()->pluck('users.id')->toArray();
+                $followingIds[] = $auth->id;
                 $q->whereIn('user_id', $followingIds);
                 if ($userId) {
                     $q->where('user_id', (int) $userId);
@@ -125,7 +126,10 @@ class PostController extends Controller
         ]);
 
         $post->load('user')->loadCount('comments');
+        $version = (int) Cache::get('posts.index.version', 1);
+       // Cache::put('posts.index.version', $version + 1);
 
+        Cache::forget('posts.index.version');
         return response()->json([
             'message' => 'Post created successfully',
             'post' => new PostResource($post),
@@ -162,7 +166,7 @@ class PostController extends Controller
             return response()->json(['message' => 'Admins cannot update posts'], 403);
         }
         if ((int) $post->user_id !== (int) $auth->id) {
-            return response()->json(['message' => 'Forbidden'], 403);
+            return response()->json(['message' => 'Forbidden: Ne možete menjati tuđe postove.'], 403);
         }
 
         $data = $request->validate([
@@ -194,7 +198,7 @@ class PostController extends Controller
             return response()->json(['message' => 'Admins cannot delete posts'], 403);
         }
         if ((int) $post->user_id !== (int) $auth->id) {
-            return response()->json(['message' => 'Forbidden'], 403);
+            return response()->json(['message' => 'Forbidden: Ne možete brisati tuđe postove.'], 403);
         }
 
         $post->delete();

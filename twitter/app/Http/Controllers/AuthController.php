@@ -64,4 +64,15 @@ class AuthController extends Controller
             'message' => 'You have successfully logged out.'
         ];
     }
+    public function searchUsers(Request $request)
+    {
+        $query = $request->query('query');
+        $currentUserId = auth('sanctum')->id();
+       
+        $users = User::where('name', 'LIKE', "%{$query}%")
+                    ->where('id', '!=', auth()->id())
+                    ->get();
+
+        return response()->json($users);
+    }
 }

@@ -9,6 +9,19 @@ function Profile() {
   const [user, setUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
+  const [posts, setPosts] = useState([]); // State za čuvanje tvojih postova
+
+
+  const handleDeletePost = async (id) => {
+    if (window.confirm('Da li ste sigurni da želite da obrišete ovu objavu?')) {
+      try {
+        await api.delete(`/posts/${id}`);
+        setPosts(posts.filter(post => post.id !== id));
+      } catch (err) {
+        console.error("Greška pri brisanju:", err);
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -20,6 +33,9 @@ function Profile() {
       try {
         const response = await api.get('/user');
         setUser(response.data);
+
+        const postsResponse = await api.get(`/posts?user_id=${response.data.id}`);
+        setPosts(postsResponse.data.posts || []);
       } catch (err) {
         console.error("Greška pri preuzimanju podataka:", err);
         if (err.response?.status === 401) {
@@ -60,6 +76,7 @@ function Profile() {
       </div>
     );
   }
+  
 
   return (
     <div className="profile-container">
@@ -82,8 +99,8 @@ function Profile() {
           </p>
 
           <div className="stats-row">
-            <span><strong>0</strong> Prati</span>
-            <span><strong>0</strong> Pratilaca</span>
+            <span><strong>{user?.following_count || 0}</strong> Prati</span>
+            <span><strong>{user?.followers_count || 0}</strong> Pratilaca</span>
           </div>
         </div>
 
@@ -95,7 +112,22 @@ function Profile() {
       </div>
 
       <div className="profile-feed">
-        <p className="no-tweets">Vaše objave će se pojaviti ovde.</p>
+        {/* <p className="no-tweets">Vaše objave će se pojaviti ovde.</p> */}
+        {posts.length > 0 ? (
+          posts.map((tweet) => (
+            <TweetCard
+              key={tweet.id}
+              postId={tweet.id}
+              authorId={tweet.user_id}
+              username={tweet.user?.name || user?.name}
+              content={tweet.content}
+              timestamp={new Date(tweet.created_at).toLocaleDateString()}
+              onDelete={handleDeletePost} // Dodajemo funkciju za brisanje
+            />
+          ))
+        ) : (
+          <p className="no-tweets">Još uvek niste ništa objavili.</p>
+        )}
       </div>
     </div>
   );

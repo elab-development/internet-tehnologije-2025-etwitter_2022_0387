@@ -9,6 +9,9 @@ function Home() {
     const [tweets, setTweets] = useState([]);
     const [content, setContent] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [editingPostId, setEditingPostId] = useState(null); // Čuvamo ID posta koji menjamo
+   const [currentUser, setCurrentUser] = useState(null);
+
     const limit = 280;
     const isOverLimit = content.length > limit;
 
@@ -16,7 +19,7 @@ function Home() {
         setIsLoading(true);
         try {
             const response = await api.get('/posts');
-            const data = response.data.data || response.data;
+            const data = response.data.posts || [];
             setTweets(data);
         } catch (error) {
             console.error("Greška pri učitavanju:", error);
@@ -28,6 +31,21 @@ function Home() {
     useEffect(() => {
         fetchPosts();
     }, []);
+   // DODATO: Funkcija da saznamo ko si ti (tvoj ID)
+    const fetchCurrentUser = async () => {
+        try {
+            const response = await api.get('/user');
+            setCurrentUser(response.data);
+        } catch (error) {
+            console.error("Greška pri preuzimanju korisnika:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchPosts();
+        fetchCurrentUser(); // Pozivamo pri učitavanju
+    }, []);
+
 //Funkcija za brisanje tweeta
     const handleDelete = async (postId) => {
         if (window.confirm("Da li ste sigurni da želite da obrišete ovaj post?")) {
@@ -41,17 +59,46 @@ function Home() {
         }
     };
 
-    const handlePostSubmit = async () => {
-        if (!content.trim()) return;
+    // const handlePostSubmit = async () => {
+    //     if (!content.trim()) return;
 
-        try {
+    //     try {
+    //         await api.post('/posts', { content: content });
+    //         setContent('');
+    //         fetchPosts();
+    //     } catch (error) {
+    //         alert("Došlo je do greške prilikom objavljivanja.");
+    //     }
+    // };
+
+
+    // 1. Kada klikneš na dugme Edit u TweetCard-u
+const handleEditInitiate = (postId, currentContent) => {
+    setEditingPostId(postId);
+    setContent(currentContent);
+    window.scrollTo({ top: 0, behavior: 'smooth' }); // Skroluj do vrha da vidiš textarea
+};
+
+// 2. Modifikovani submit (sada radi i Create i Update)
+const handlePostSubmit = async () => {
+    if (!content.trim() || isOverLimit) return;
+
+    try {
+        if (editingPostId) {
+            // Ako imamo ID, radimo UPDATE
+            await api.put(`/posts/${editingPostId}`, { content: content });
+            setEditingPostId(null);
+        } else {
+            // Ako nemamo ID, radimo CREATE
             await api.post('/posts', { content: content });
-            setContent('');
-            fetchPosts();
-        } catch (error) {
-            alert("Došlo je do greške prilikom objavljivanja.");
         }
-    };
+        setContent('');
+        fetchPosts();
+    } catch (error) {
+        console.error("Greška:", error);
+        alert(error.response?.status === 403 ? "Niste autorizovani." : "Došlo je do greške.");
+    }
+};
 
     return (
         <div className="feed-container">
@@ -59,7 +106,7 @@ function Home() {
                 <h2>Global Feed</h2>
                 <div className={`pulse-dot ${isLoading ? 'loading' : ''}`}></div>
             </div>
-            
+           
             <div className="composer-section">
                 <textarea 
                     placeholder="Share your thoughts..." 
@@ -113,10 +160,12 @@ function Home() {
                             key={tweet.id} 
                             postId={tweet.id}       
                             authorId={tweet.user_id} 
+                            currentUserId={currentUser?.id} 
                             onDelete={handleDelete}
                             username={tweet.user?.name || 'Korisnik'} 
                             content={tweet.content} 
                             timestamp={new Date(tweet.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                            onEdit={() => handleEditInitiate(tweet.id, tweet.content)}
                         />
                     ))
                 ) : (
