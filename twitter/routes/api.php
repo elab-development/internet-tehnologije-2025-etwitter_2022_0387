@@ -19,6 +19,13 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+Route::get('/team', function () {
+        return [
+            ['id' => 1, 'name' => 'Nađa Mladenović', 'github' => 'https://github.com/nadjamladenovic'],
+            ['id' => 2, 'name' => 'Tara Marković', 'github' => 'https://github.com/TaraMarkovic'],
+            ['id' => 3, 'name' => 'Tijana Šikanja', 'github' => 'https://github.com/TijanaSikanja'],
+        ];
+    });
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -30,7 +37,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
-       Route::get('/follows', [FollowController::class, 'index']);
+    Route::get('/follows', [FollowController::class, 'index']);
     Route::get('/users/{user}/followers', [FollowController::class, 'followers']);
     Route::get('/users/{user}/following', [FollowController::class, 'following']);
     Route::post('/users/{user}/follow', [FollowController::class, 'follow']);
@@ -49,5 +56,5 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     Route::get('/admin/stats/hn-tags', [AdminExternalStatsController::class, 'hnPopularKeywords']);
     Route::get('/admin/stats/guardian-tags', [AdminExternalStatsController::class, 'guardianPopularTags']);
-
+    
 });
