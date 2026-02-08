@@ -15,7 +15,8 @@ function Navbar() {
     if (value.length > 2) {
       try {
         const response = await api.get(`/users/search?query=${value}`);
-        setSearchResults(response.data);
+        setSearchResults(response.data.data ?? response.data);
+
       } catch (err) {
         console.error("Greška pri pretrazi:", err);
       }
@@ -25,18 +26,25 @@ function Navbar() {
   };
 
   // Funkcija za praćenje korisnika direktno iz pretrage
-  const handleFollow = async (userId) => {
-    try {
-      await api.post(`/users/${userId}/follow`);
-      alert("Uspešno zapraćeno!");
-      setSearchTerm('');
-      setSearchResults([]);
-      window.location.reload(); // Osvežavamo da se pojave novi postovi na početnoj
-    } catch (err) {
-        const errorMessage = err.response?.data?.message || "Greška pri praćenju.";
-        alert(errorMessage);
+  const handleToggleFollow = async (user) => {
+  try {
+    if (user.is_following) {
+      await api.delete(`/users/${user.id}/follow`);
+    } else {
+      await api.post(`/users/${user.id}/follow`);
     }
-  };
+
+    // optimistički update da odmah promeni tekst dugmeta
+    setSearchResults(prev =>
+      prev.map(u => u.id === user.id ? { ...u, is_following: !u.is_following } : u)
+    );
+
+    window.dispatchEvent(new Event('user:refresh'));
+  } catch (err) {
+    const errorMessage = err.response?.data?.message || "Greška.";
+    alert(errorMessage);
+  }
+};
   return (
     <nav className="main-navbar">
       <Link to="/" className="nav-logo">
@@ -56,12 +64,13 @@ function Navbar() {
             {searchResults.map((user) => (
               <div key={user.id} className="nav-search-item">
                 <span className="search-user-name">{user.name}</span>
-                <button 
-                  className="search-follow-btn" 
-                  onClick={() => handleFollow(user.id)}
-                >
-                  Zaprati
-                </button>
+                  <button
+                    className="search-follow-btn"
+                    onClick={() => handleToggleFollow(user)}
+                  >
+                    {user.is_following ? 'Unfollow' : 'Follow'}
+                  </button>
+
               </div>
             ))}
           </div>

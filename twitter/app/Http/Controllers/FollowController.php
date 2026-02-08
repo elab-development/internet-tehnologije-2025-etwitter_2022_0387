@@ -85,6 +85,13 @@ class FollowController extends Controller
         if ($auth->isAdmin()) {
             return response()->json(['message' => 'Admins cannot unfollow users'], 403);
         }
+        if ((int) $auth->id === (int) $user->id) {
+        return response()->json(['message' => 'You cannot unfollow yourself'], 422);
+        }
+
+        if ($user->isAdmin()) {
+            return response()->json(['message' => 'You cannot unfollow admin accounts'], 403);
+        }
 
         $deleted = Follow::where('follower_id', $auth->id)
             ->where('following_id', $user->id)

@@ -14,10 +14,22 @@ class UserMiniResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'role' => $this->role,
-        ];
+       $auth = $request->user();
+
+    $isFollowing = false;
+
+    if ($auth && !$auth->isAdmin()) {
+        // ne pratimo sebe + ne pratimo admina (po pravilima koje već imaš u FollowController)
+        if ((int) $auth->id !== (int) $this->id && $this->role !== 'admin') {
+            $isFollowing = $auth->isFollowing($this->resource);
+        }
+    }
+
+    return [
+        'id' => $this->id,
+        'name' => $this->name,
+        'role' => $this->role,
+        'is_following' => $isFollowing,
+    ];
     }
 }

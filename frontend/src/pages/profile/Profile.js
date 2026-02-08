@@ -23,6 +23,24 @@ function Profile() {
     }
   };
 
+   const fetchMe = async () => {
+  try {
+    const response = await api.get('/user');
+    setUser(response.data);
+  } catch (err) {
+    console.error("Greška pri osvežavanju user-a:", err);
+  }
+};
+  useEffect(() => {
+  const handler = () => fetchMe();
+
+  window.addEventListener('user:refresh', handler);
+
+  return () => window.removeEventListener('user:refresh', handler);
+}, []);
+
+
+
   useEffect(() => {
     const fetchUserData = async () => {
       if (!isLoggedIn) {
@@ -50,6 +68,19 @@ function Profile() {
     fetchUserData();
   }, [isLoggedIn]);
 
+  useEffect(() => {
+  const handler = async () => {
+    if (!user?.id) return;
+
+    const postsResponse = await api.get(`/posts?user_id=${user.id}`);
+    setPosts(postsResponse.data.posts || []);
+  };
+
+  window.addEventListener('posts:refresh', handler);
+  return () => window.removeEventListener('posts:refresh', handler);
+}, [user?.id]);
+
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -76,8 +107,7 @@ function Profile() {
       </div>
     );
   }
-  
-
+ 
   return (
     <div className="profile-container">
       <div className="profile-header">
@@ -118,7 +148,9 @@ function Profile() {
             <TweetCard
               key={tweet.id}
               postId={tweet.id}
-              authorId={tweet.user_id}
+            //  authorId={tweet.user_id}
+              authorId={user?.id}
+              currentUserId={user?.id}
               username={tweet.user?.name || user?.name}
               content={tweet.content}
               timestamp={new Date(tweet.created_at).toLocaleDateString()}

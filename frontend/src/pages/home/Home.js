@@ -4,7 +4,6 @@ import TweetCard from '../../components/tweetcard/TweetCard';
 import './Home.css';
 
 
-
 function Home() {
     const [tweets, setTweets] = useState([]);
     const [content, setContent] = useState('');
@@ -18,7 +17,7 @@ function Home() {
     const fetchPosts = async () => {
         setIsLoading(true);
         try {
-            const response = await api.get('/posts');
+            const response = await api.get(`/posts?ttl=1&ts=${Date.now()}`);
             const data = response.data.posts || [];
             setTweets(data);
         } catch (error) {
@@ -28,9 +27,12 @@ function Home() {
         }
     };
 
+   
     useEffect(() => {
-        fetchPosts();
-    }, []);
+    const handler = () => fetchPosts();
+    window.addEventListener('posts:refresh', handler);
+    return () => window.removeEventListener('posts:refresh', handler);
+    }, []); 
    // DODATO: Funkcija da saznamo ko si ti (tvoj ID)
     const fetchCurrentUser = async () => {
         try {
@@ -101,6 +103,7 @@ const handlePostSubmit = async () => {
 };
 
     return (
+   
         <div className="feed-container">
             <div className="feed-header">
                 <h2>Global Feed</h2>
@@ -159,7 +162,9 @@ const handlePostSubmit = async () => {
                         <TweetCard 
                             key={tweet.id} 
                             postId={tweet.id}       
-                            authorId={tweet.user_id} 
+                            //authorId={tweet.user_id} 
+                            author={tweet.user}  
+                            authorId={tweet.user?.id}
                             currentUserId={currentUser?.id} 
                             onDelete={handleDelete}
                             username={tweet.user?.name || 'Korisnik'} 
@@ -173,6 +178,7 @@ const handlePostSubmit = async () => {
                 )}
             </div>
         </div>
+        
     );
 }
 

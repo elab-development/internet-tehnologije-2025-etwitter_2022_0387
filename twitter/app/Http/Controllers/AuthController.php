@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Resources\UserMiniResource;
+
 
 class AuthController extends Controller
 {
@@ -66,13 +68,13 @@ class AuthController extends Controller
     }
     public function searchUsers(Request $request)
     {
-        $query = $request->query('query');
-        $currentUserId = auth('sanctum')->id();
-       
-        $users = User::where('name', 'LIKE', "%{$query}%")
-                    ->where('id', '!=', auth()->id())
-                    ->get();
+        $query = $request->query('query', '');
 
-        return response()->json($users);
+        $users = User::query()
+            ->where('name', 'LIKE', "%{$query}%")
+            ->where('id', '!=', auth()->id())
+            ->get();
+
+        return UserMiniResource::collection($users);
     }
 }
