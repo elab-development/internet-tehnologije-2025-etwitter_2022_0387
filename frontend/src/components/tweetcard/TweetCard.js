@@ -13,7 +13,10 @@ function TweetCard({
   currentUserId
 }) {
   const storageId = localStorage.getItem('user_id');
+  const userRole = localStorage.getItem('user_role'); // Pretpostavka da čuvaš rolu u localStorage
+  
   const mojId = currentUserId || storageId;
+  const isAdmin = userRole === 'admin';
 
   const isMyPost = mojId && Number(mojId) === Number(authorId);
 
@@ -27,18 +30,18 @@ function TweetCard({
   const limit = 280;
   const isOverLimit = editedContent.length > limit;
 
+  // Admin ne može da prati nikoga, a običan user ne prati admina
   const canFollowThisAuthor =
+    !isAdmin && 
     Boolean(authorId) &&
     !isMyPost &&
     author?.role !== 'admin';
 
- useEffect(() => {
+  useEffect(() => {
     setEditedContent(content);
   }, [content]);
 
-
-    
-    useEffect(() => {
+  useEffect(() => {
     const handler = (e) => {
       const detail = e.detail || {};
       const userId = Number(detail.userId);
@@ -53,34 +56,27 @@ function TweetCard({
     return () => window.removeEventListener('follow:changed', handler);
   }, [authorId]);
 
-
   const handleToggleFollow = async () => {
     try {
       const next = !isFollowing;
       if (isFollowing) {
         await api.delete(`/users/${authorId}/follow`);
-      
       } else {
         await api.post(`/users/${authorId}/follow`);
-        
       }
-        setIsFollowing(next);
+      setIsFollowing(next);
 
       window.dispatchEvent(
         new CustomEvent('follow:changed', {
           detail: { userId: Number(authorId), isFollowing: next },
         })
       );
-
-      // 3) (opciono) da profil osveži brojače
       window.dispatchEvent(new Event('user:refresh'));
-
     } catch (err) {
       const msg = err.response?.data?.message || 'Greška.';
       alert(msg);
     }
   };
-
 
   const handleEditClick = () => {
     setIsEditing(true);
@@ -94,13 +90,9 @@ function TweetCard({
 
   const handleSaveEdit = async () => {
     if (!editedContent.trim() || isOverLimit) return;
-
     try {
       await api.put(`/posts/${postId}`, { content: editedContent });
-
       setIsEditing(false);
-
-      // refresh feed/profile da povuče novi sadržaj
       window.dispatchEvent(new Event('posts:refresh'));
     } catch (err) {
       const msg = err.response?.data?.message || 'Greška pri izmeni.';
@@ -131,21 +123,14 @@ function TweetCard({
                 border: isOverLimit ? '2px solid #e02424' : '1px solid #ccc'
               }}
             />
-
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
               <span style={{ color: isOverLimit ? '#e02424' : '#666' }}>
                 {editedContent.length} / {limit}
               </span>
-
               <div style={{ display: 'flex', gap: '10px' }}>
-                <button
-                  className="action-btn"
-                  onClick={handleCancelEdit}
-                  style={{ border: '1px solid gray' }}
-                >
+                <button className="action-btn" onClick={handleCancelEdit} style={{ border: '1px solid gray' }}>
                   Cancel
                 </button>
-
                 <button
                   className="action-btn"
                   onClick={handleSaveEdit}
@@ -167,16 +152,22 @@ function TweetCard({
       </div>
 
       <div className="card-footer">
-        <button className="action-btn">Like</button>
-        <button className="action-btn">Reply</button>
-        <button className="action-btn">Share</button>
+        {/* INTERAKCIJE: Sakrivamo ako je korisnik ADMIN */}
+        {!isAdmin && (
+          <>
+            <button className="action-btn">Like</button>
+            <button className="action-btn">Reply</button>
+            <button className="action-btn">Share</button>
+          </>
+        )}
 
-        {canFollowThisAuthor ? (
+        {/* FOLLOW: Samo za obične korisnike */}
+        {canFollowThisAuthor && (
           <button
             className="action-btn"
             onClick={handleToggleFollow}
             style={{
-              marginLeft: 'auto',
+              marginLeft: isAdmin ? 'auto' : '10px',
               border: '1px solid #7fff7f',
               padding: '2px 8px',
               borderRadius: '4px'
@@ -184,17 +175,22 @@ function TweetCard({
           >
             {isFollowing ? 'Unfollow' : 'Follow'}
           </button>
-        ) : null}
+        )}
 
-        {isMyPost ? (
+        {/* DELETE LOGIKA: Prikazujemo ako je MOJ post ILI ako sam ADMIN */}
+        {(isMyPost || isAdmin) && (
           <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px' }}>
-            <button
-              className="action-btn edit-btn"
-              onClick={handleEditClick}
-              style={{ color: '#4da6ff', border: '1px solid #4da6ff', padding: '2px 8px', borderRadius: '4px' }}
-            >
-              Edit
-            </button>
+            {/* Edit dozvoljavamo samo vlasniku, NE adminu */}
+            {isMyPost && !isAdmin && (
+              <button
+                className="action-btn edit-btn"
+                onClick={handleEditClick}
+                style={{ color: '#4da6ff', border: '1px solid #4da6ff', padding: '2px 8px', borderRadius: '4px' }}
+              >
+                Edit
+              </button>
+            )}
+            
             <button
               className="action-btn delete-btn"
               onClick={() => onDelete(postId)}
@@ -203,7 +199,7 @@ function TweetCard({
               Delete
             </button>
           </div>
-        ) : null}
+        )}
       </div>
     </div>
   );

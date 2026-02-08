@@ -31,7 +31,6 @@ class PostController extends Controller
         }
 
         $ttl = max(5, min(300, (int) $request->query('ttl', 30)));
-
         $version = Cache::get('posts.index.version', 1);
 
         $cacheKey = sprintf(
@@ -59,28 +58,33 @@ class PostController extends Controller
                 ->with(['user'])
                 ->withCount('comments');
 
+            // --- LOGIKA VIDLJIVOSTI ---
             if ($auth->isAdmin()) {
+                // Admin vidi apsolutno sve
                 if ($userId) {
                     $q->where('user_id', (int) $userId);
                 }
             } else {
-                $followingIds = $auth->following()->pluck('users.id')->toArray();
-                $followingIds[] = $auth->id;
-                $q->whereIn('user_id', $followingIds);
+                // Običan user vidi samo one koje prati + svoje objave
+                $followingIds = $auth->following()->pluck('users.id')->push($auth->id);
+                
                 if ($userId) {
-                    $q->where('user_id', (int) $userId);
+                    // Ako traži specifičan profil, proveravamo da li ga prati
+                    if ($followingIds->contains((int)$userId)) {
+                        $q->where('user_id', (int) $userId);
+                    } else {
+                        // Ako ne prati tog usera, vraćamo prazan rezultat
+                        $q->whereRaw('1 = 0');
+                    }
+                } else {
+                    $q->whereIn('user_id', $followingIds);
                 }
             }
 
             $q->orderBy($sortBy, $sortDir);
 
             $paginator = $q->paginate($perPage, ['*'], 'page', $page);
-
-            $items = $paginator->items();
-            $posts = array_map(
-                fn($post) => (new \App\Http\Resources\PostResource($post))->toArray($request),
-                $items
-            );
+            $posts = PostResource::collection($paginator->getCollection())->toArray($request);
 
             return [
                 'posts'    => $posts,
@@ -93,25 +97,12 @@ class PostController extends Controller
         return response()->json($payload);
     }
 
-
-
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
+     * Store a newly created resource.
      */
     public function store(Request $request)
     {
         $auth = $request->user();
-        if (!$auth) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
         if ($auth->isAdmin()) {
             return response()->json(['message' => 'Admins cannot create posts'], 403);
         }
@@ -125,86 +116,57 @@ class PostController extends Controller
             'content' => $data['content'],
         ]);
 
-        $post->load('user')->loadCount('comments');
-        $version = (int) Cache::get('posts.index.version', 1);
-       // Cache::put('posts.index.version', $version + 1);
-
         Cache::forget('posts.index.version');
+        
         return response()->json([
             'message' => 'Post created successfully',
-            'post' => new PostResource($post),
+            'post' => new PostResource($post->load('user')->loadCount('comments')),
         ]);
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(Post $post)
-    {
-        $post->load(['user'])->loadCount('comments');
-        return new PostResource($post);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Post $post)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
+     * Update the specified resource.
      */
     public function update(Request $request, Post $post)
     {
         $auth = $request->user();
-        if (!$auth) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
+        
+        // Admin ne može da edituje
         if ($auth->isAdmin()) {
             return response()->json(['message' => 'Admins cannot update posts'], 403);
         }
+
         if ((int) $post->user_id !== (int) $auth->id) {
-            return response()->json(['message' => 'Forbidden: Ne možete menjati tuđe postove.'], 403);
+            return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        $data = $request->validate([
-            'content' => ['required', 'string', 'max:280'],
-        ]);
+        $data = $request->validate(['content' => ['required', 'string', 'max:280']]);
+        $post->update(['content' => $data['content']]);
+        
+        Cache::forget('posts.index.version');
 
-        $post->update([
-            'content' => $data['content'],
-        ]);
-
-        $post->load('user')->loadCount('comments');
-
-        return response()->json([
-            'message' => 'Post updated successfully',
-            'post' => new PostResource($post),
-        ]);
+        return response()->json(['message' => 'Post updated', 'post' => new PostResource($post)]);
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified resource.
      */
     public function destroy(Request $request, Post $post)
     {
         $auth = $request->user();
-        if (!$auth) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-        if ($auth->isAdmin()) {
-            return response()->json(['message' => 'Admins cannot delete posts'], 403);
-        }
-        if ((int) $post->user_id !== (int) $auth->id) {
-            return response()->json(['message' => 'Forbidden: Ne možete brisati tuđe postove.'], 403);
+
+        // Admin MOŽE da briše, ili vlasnik posta
+        $canDelete = $auth->isAdmin() || (int) $post->user_id === (int) $auth->id;
+
+        if (!$canDelete) {
+            return response()->json(['message' => 'Forbidden'], 403);
         }
 
         $post->delete();
+        
+        // Invalidiraj keš jer se sadržaj promenio
+        Cache::increment('posts.index.version');
 
-        return response()->json([
-            'message' => 'Post deleted',
-        ], 200);
+        return response()->json(['message' => 'Post deleted'], 200);
     }
 }
