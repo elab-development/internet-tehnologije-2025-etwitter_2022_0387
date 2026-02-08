@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
 import TweetCard from '../../components/tweetcard/TweetCard';
+import { Link } from 'react-router-dom'; // Potrebno za dugmiće na baneru
 import './Home.css';
 
 function Home() {
@@ -10,6 +11,8 @@ function Home() {
     const [editingPostId, setEditingPostId] = useState(null);
     const [currentUser, setCurrentUser] = useState(null);
 
+    // Definisanje tokena za proveru autentičnosti
+    const token = localStorage.getItem('token');
     const limit = 280;
     const isOverLimit = content.length > limit;
 
@@ -29,17 +32,10 @@ function Home() {
         }
     };
 
-    useEffect(() => {
-        const handler = () => fetchPosts();
-        window.addEventListener('posts:refresh', handler);
-        return () => window.removeEventListener('posts:refresh', handler);
-    }, []);
-
     const fetchCurrentUser = async () => {
         try {
             const response = await api.get('/user');
             setCurrentUser(response.data);
-            // Opciono: Sačuvaj rolu u localStorage ako je TweetCard vuče odatle
             localStorage.setItem('user_role', response.data.role);
         } catch (error) {
             console.error("Greška pri preuzimanju korisnika:", error);
@@ -47,8 +43,17 @@ function Home() {
     };
 
     useEffect(() => {
-        fetchPosts();
-        fetchCurrentUser();
+        // Pozivaj funkcije samo ako korisnik ima token
+        if (token) {
+            fetchPosts();
+            fetchCurrentUser();
+        }
+    }, [token]);
+
+    useEffect(() => {
+        const handler = () => fetchPosts();
+        window.addEventListener('posts:refresh', handler);
+        return () => window.removeEventListener('posts:refresh', handler);
     }, []);
 
     const handleDelete = async (postId) => {
@@ -64,7 +69,7 @@ function Home() {
     };
 
     const handleEditInitiate = (postId, currentContent) => {
-        if (isAdmin) return; // Admin ne bi trebalo da može da edituje
+        if (isAdmin) return; 
         setEditingPostId(postId);
         setContent(currentContent);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -88,6 +93,24 @@ function Home() {
         }
     };
 
+    // --- DODATO: Logika za neulogovanog korisnika ---
+    if (!token) {
+    return (
+        <div className="guest-welcome-container">
+            <div className="guest-banner">
+                {/* Ovde stavi putanju do tvoje nove slike */}
+                <img src="/logo.png" alt="E-Twitter Logo" className="guest-logo" />
+                <h1>Poveži se sa svetom.</h1>
+                <p>Podeli svoje misli, prati omiljene autore i budi deo globalne diskusije. Tvoja priča počinje ovde.</p>
+                <div className="guest-buttons">
+                    <Link to="/signup" className="guest-btn register">REGISTRUJ SE</Link>
+                    <Link to="/login" className="guest-btn login">PRIJAVI SE</Link>
+                </div>
+            </div>
+        </div>
+    );
+}
+
     return (
         <div className="feed-container">
             <div className="feed-header">
@@ -95,7 +118,6 @@ function Home() {
                 <div className={`pulse-dot ${isLoading ? 'loading' : ''}`}></div>
             </div>
             
-            {/* SAKRIVANJE COMPOSER SEKCIJE ZA ADMINA */}
             {!isAdmin && (
                 <div className="composer-section">
                     <textarea 

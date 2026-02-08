@@ -56,43 +56,43 @@ function Navbar() {
         E-TWITTER
       </Link>
       
-      <div className="nav-search-wrapper">
-        <input
-          type="text"
-          className="nav-search-input"
-          placeholder="Pretraži ljude..."
-          value={searchTerm}
-          onChange={handleSearch}
-        />
-        
-        {searchResults.length > 0 && (
-          <div className="nav-search-dropdown">
-            {searchResults.map((user) => (
-              <div key={user.id} className="nav-search-item">
-                <span className="search-user-name">{user.name}</span>
-                {/* Admin ne vidi Follow dugme */}
-                {!isAdmin && (
-                  <button
-                    className="search-follow-btn"
-                    onClick={() => handleToggleFollow(user)}
-                  >
-                    {user.is_following ? 'Unfollow' : 'Follow'}
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* SEARCH SE PRIKAZUJE SAMO AKO POSTOJI TOKEN */}
+      {token && (
+        <div className="nav-search-wrapper">
+          <input
+            type="text"
+            className="nav-search-input"
+            placeholder="Pretraži ljude..."
+            value={searchTerm}
+            onChange={handleSearch}
+          />
+          
+          {searchResults.length > 0 && (
+            <div className="nav-search-dropdown">
+              {searchResults.map((user) => (
+                <div key={user.id} className="nav-search-item">
+                  <span className="search-user-name">{user.name}</span>
+                  {!isAdmin && (
+                    <button
+                      className="search-follow-btn"
+                      onClick={() => handleToggleFollow(user)}
+                    >
+                      {user.is_following ? 'Unfollow' : 'Follow'}
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="nav-menu">
         <Link to="/" className="menu-item">Početna</Link>
         
-        {/* USLOVNO RENDEROVANJE: */}
         {token ? (
           <>
             <Link to="/profile" className="menu-item">Profil</Link>
-            {/* Opciono: Dugme za brzu odjavu */}
             <span 
               className="menu-item" 
               style={{cursor: 'pointer', color: '#ff4444'}}
