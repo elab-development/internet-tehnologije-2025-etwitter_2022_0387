@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
+import axios from 'axios';
 import TweetCard from '../../components/tweetcard/TweetCard';
 import { Link } from 'react-router-dom'; // Potrebno za dugmiće na baneru
 import './Home.css';
+
 
 function Home() {
     const [tweets, setTweets] = useState([]);
@@ -10,7 +12,24 @@ function Home() {
     const [isLoading, setIsLoading] = useState(false);
     const [editingPostId, setEditingPostId] = useState(null);
     const [currentUser, setCurrentUser] = useState(null);
+    const [externalEmojis, setExternalEmojis] = useState([]);
+    const [showPicker, setShowPicker] = useState(false);
 
+    const fetchEmojis = async () => {
+    if (externalEmojis.length > 0) return; // Da ne učitava svaki put
+    try {
+        // Koristimo eksterni API
+        const response = await axios.get('https://emoji-api.com/emojis?access_key=2cd16972a844bd5061bbe48dd7490a13c9d1818a');
+        setExternalEmojis(response.data.slice(0, 100)); // Uzimamo prvih 100 radi brzine
+    } catch (error) {
+        console.error("Greška pri povlačenju emojija:", error);
+    }
+    };
+
+    const togglePicker = () => {
+        setShowPicker(!showPicker);
+        if (!showPicker) fetchEmojis();
+    };
     // Definisanje tokena za proveru autentičnosti
     const token = localStorage.getItem('token');
     const limit = 280;
@@ -98,7 +117,7 @@ function Home() {
     return (
         <div className="guest-welcome-container">
             <div className="guest-banner">
-                {/* Ovde stavi putanju do tvoje nove slike */}
+                {}
                 <img src="/logo.png" alt="E-Twitter Logo" className="guest-logo" />
                 <h1>Poveži se sa svetom.</h1>
                 <p>Podeli svoje misli, prati omiljene autore i budi deo globalne diskusije. Tvoja priča počinje ovde.</p>
@@ -132,7 +151,50 @@ function Home() {
                         }}
                     ></textarea>
                     <div className="composer-actions" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                        
+                        {/* --- OVDE DODAJEMO EMOJI DEO --- */}
+    <div style={{ alignSelf: 'flex-start', position: 'relative', marginBottom: '10px' }}>
+        <button 
+            type="button" 
+            onClick={() => {
+                setShowPicker(!showPicker);
+                if(!showPicker) fetchEmojis();
+            }}
+            style={{ background: 'transparent', border: '1px solid #4da6ff', color: '#4da6ff', cursor: 'pointer', padding: '2px 8px', borderRadius: '4px' }}
+        >
+            😊 Add Emoji
+        </button>
+
+        {showPicker && (
+            <div style={{ 
+                position: 'absolute', 
+                top: '30px', 
+                left: 0, 
+                zIndex: 1000, 
+                background: '#ffffff', 
+                border: '1px solid #4da6ff', 
+                width: '250px', 
+                height: '200px', 
+                overflowY: 'auto',
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '5px',
+                padding: '10px'
+            }}>
+                {externalEmojis.map(emoji => (
+                    <span 
+                        key={emoji.slug} 
+                        onClick={() => {
+                            setContent(prev => prev + emoji.character);
+                            setShowPicker(false);
+                        }}
+                        style={{ cursor: 'pointer', fontSize: '20px' }}
+                    >
+                        {emoji.character}
+                    </span>
+                ))}
+            </div>
+        )}
+    </div>
                         {isOverLimit && (
                             <span style={{ color: '#e02424', fontSize: '13px', marginBottom: '5px', fontWeight: 600 }}>
                                 ⚠️ Ne možete uneti više od 280 karaktera!
