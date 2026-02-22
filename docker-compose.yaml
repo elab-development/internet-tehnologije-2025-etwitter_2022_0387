@@ -1,0 +1,70 @@
+
+
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: twitter
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks: [appnet]
+
+  twitter:
+    build:
+      context: ./twitter
+      dockerfile: DockerFile
+    working_dir: /var/www
+    volumes:
+      - ./twitter:/var/www
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8080
+
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: twitter
+      DB_USERNAME: root
+      DB_PASSWORD: root
+
+      FRONTEND_URL: http://localhost:3000
+    depends_on:
+      - db
+    networks: [appnet]
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./twitter:/var/www
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - twitter
+    networks: [appnet]
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: DockerFile
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      # CRA watchdog fix (često treba na Linux/WSL)
+      CHOKIDAR_USEPOLLING: "true"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - nginx
+    networks: [appnet]
+
+volumes:
+  dbdata:
+
+networks:
+  appnet:

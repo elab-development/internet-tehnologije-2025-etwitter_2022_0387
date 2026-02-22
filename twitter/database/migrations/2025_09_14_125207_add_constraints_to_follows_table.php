@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('follows', function (Blueprint $table) {
-            $table->unique(['follower_id', 'following_id']);
-        });
+        //Schema::table('follows', function (Blueprint $table) {
+         //   $table->unique(['follower_id', 'following_id']);
+       // });
     }
 
     /**

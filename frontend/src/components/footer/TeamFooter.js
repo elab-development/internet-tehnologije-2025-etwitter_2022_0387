@@ -6,7 +6,7 @@ const TeamFooter = () => {
     const [teamMembers, setTeamMembers] = useState([]);
 
     useEffect(() => {
-        fetch('http://127.0.0.1:8000/api/team', {
+        fetch('http://localhost:8080/api/team', {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'

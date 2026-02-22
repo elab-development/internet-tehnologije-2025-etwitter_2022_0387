@@ -1,0 +1,23 @@
+FROM php:8.2-fpm-alpine
+
+RUN apk add --no-cache \
+  bash curl git unzip icu-dev oniguruma-dev libzip-dev zlib-dev \
+  $PHPIZE_DEPS
+
+RUN docker-php-ext-install pdo pdo_mysql intl mbstring zip opcache
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www
+
+# PRVO iskopiraj sve fajlove (tako da artisan bude prisutan)
+COPY . .
+
+# DRUGO instaliraj pakete (sada će artisan raditi)
+RUN composer install --no-interaction --prefer-dist
+
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+
+EXPOSE 9000
+CMD ["php-fpm"]
+
