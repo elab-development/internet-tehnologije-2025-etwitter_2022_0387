@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use OpenApi\Annotations as OA;
 use App\Http\Resources\CommentResource;
 use App\Models\Comment;
 use App\Models\Post;
@@ -10,8 +11,55 @@ use Illuminate\Http\Request;
 class CommentController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     */
+ * @OA\Get(
+ *   path="/api/comments",
+ *   summary="List comments for a post",
+ *   tags={"Comments"},
+ *   security={{"bearerAuth":{}}},
+ *   @OA\Parameter(
+ *     name="post_id",
+ *     in="query",
+ *     required=true,
+ *     description="Post ID (required)",
+ *     @OA\Schema(type="integer", minimum=1),
+ *     example=1
+ *   ),
+ *   @OA\Parameter(
+ *     name="q",
+ *     in="query",
+ *     required=false,
+ *     description="Search in comment content or user (name/email)",
+ *     @OA\Schema(type="string"),
+ *     example="hello"
+ *   ),
+ *   @OA\Response(
+ *     response=200,
+ *     description="OK",
+ *     @OA\JsonContent(
+ *       @OA\Property(
+ *         property="comments",
+ *         type="array",
+ *         @OA\Items(type="object")
+ *       )
+ *     )
+ *   ),
+ *   @OA\Response(response=401, description="Unauthorized"),
+ *   @OA\Response(
+ *     response=422,
+ *     description="post_id is required",
+ *     @OA\JsonContent(
+ *       @OA\Property(property="message", type="string", example="post_id is required")
+ *     )
+ *   ),
+ *   @OA\Response(
+ *     response=404,
+ *     description="Post not found",
+ *     @OA\JsonContent(
+ *       @OA\Property(property="message", type="string", example="Post not found")
+ *     )
+ *   )
+ * )
+ */
     public function index(Request $request)
     {
         $auth = $request->user();
@@ -62,9 +110,33 @@ class CommentController extends Controller
         //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+   /**
+ * @OA\Post(
+ *   path="/api/comments",
+ *   summary="Create a comment (non-admin only)",
+ *   tags={"Comments"},
+ *   security={{"bearerAuth":{}}},
+ *   @OA\RequestBody(
+ *     required=true,
+ *     @OA\JsonContent(
+ *       required={"post_id","content"},
+ *       @OA\Property(property="post_id", type="integer", example=1),
+ *       @OA\Property(property="content", type="string", maxLength=280, example="Nice post!")
+ *     )
+ *   ),
+ *   @OA\Response(
+ *     response=201,
+ *     description="Created",
+ *     @OA\JsonContent(
+ *       @OA\Property(property="message", type="string", example="Comment created successfully"),
+ *       @OA\Property(property="comment", type="object")
+ *     )
+ *   ),
+ *   @OA\Response(response=401, description="Unauthorized"),
+ *   @OA\Response(response=403, description="Admins cannot create comments"),
+ *   @OA\Response(response=422, description="Validation error")
+ * )
+ */
     public function store(Request $request)
     {
         $auth = $request->user();
@@ -112,8 +184,40 @@ class CommentController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
-     */
+ * @OA\Put(
+ *   path="/api/comments/{comment}",
+ *   summary="Update a comment (owner only, admin forbidden)",
+ *   tags={"Comments"},
+ *   security={{"bearerAuth":{}}},
+ *   @OA\Parameter(
+ *     name="comment",
+ *     in="path",
+ *     required=true,
+ *     description="Comment ID",
+ *     @OA\Schema(type="integer"),
+ *     example=1
+ *   ),
+ *   @OA\RequestBody(
+ *     required=true,
+ *     @OA\JsonContent(
+ *       required={"content"},
+ *       @OA\Property(property="content", type="string", maxLength=280, example="Updated comment")
+ *     )
+ *   ),
+ *   @OA\Response(
+ *     response=200,
+ *     description="Updated",
+ *     @OA\JsonContent(
+ *       @OA\Property(property="message", type="string", example="Comment updated successfully"),
+ *       @OA\Property(property="comment", type="object")
+ *     )
+ *   ),
+ *   @OA\Response(response=401, description="Unauthorized"),
+ *   @OA\Response(response=403, description="Forbidden / Admins cannot update comments"),
+ *   @OA\Response(response=404, description="Comment not found"),
+ *   @OA\Response(response=422, description="Validation error")
+ * )
+ */
     public function update(Request $request, Comment $comment)
     {
         $auth = $request->user();
@@ -144,8 +248,31 @@ class CommentController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     */
+ * @OA\Delete(
+ *   path="/api/comments/{comment}",
+ *   summary="Delete a comment (owner only, admin forbidden)",
+ *   tags={"Comments"},
+ *   security={{"bearerAuth":{}}},
+ *   @OA\Parameter(
+ *     name="comment",
+ *     in="path",
+ *     required=true,
+ *     description="Comment ID",
+ *     @OA\Schema(type="integer"),
+ *     example=1
+ *   ),
+ *   @OA\Response(
+ *     response=200,
+ *     description="Deleted",
+ *     @OA\JsonContent(
+ *       @OA\Property(property="message", type="string", example="Comment deleted")
+ *     )
+ *   ),
+ *   @OA\Response(response=401, description="Unauthorized"),
+ *   @OA\Response(response=403, description="Forbidden / Admins cannot delete comments"),
+ *   @OA\Response(response=404, description="Comment not found")
+ * )
+ */
     public function destroy(Request $request, Comment $comment)
     {
         $auth = $request->user();
