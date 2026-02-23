@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use OpenApi\Annotations as OA;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,6 +13,37 @@ use App\Http\Resources\UserMiniResource;
 
 class AuthController extends Controller
 {
+    /**
+ * @OA\Post(
+ *   path="/api/register",
+ *   summary="Register a new user",
+ *   tags={"Auth"},
+ *   @OA\RequestBody(
+ *     required=true,
+ *     @OA\JsonContent(
+ *       required={"name","email","password"},
+ *       @OA\Property(property="name", type="string", example="Tijana Šikanja"),
+ *       @OA\Property(property="email", type="string", example="tijana@example.com"),
+ *       @OA\Property(property="password", type="string", minLength=8, example="secret123"),
+ *       @OA\Property(property="bio", type="string", nullable=true, example="Hi! I like Laravel.")
+ *     )
+ *   ),
+ *   @OA\Response(
+ *     response=200,
+ *     description="Registered successfully (token returned)",
+ *     @OA\JsonContent(
+ *       @OA\Property(property="data", type="object"),
+ *       @OA\Property(property="access_token", type="string", example="1|someSanctumTokenHere"),
+ *       @OA\Property(property="token_type", type="string", example="Bearer")
+ *     )
+ *   ),
+ *   @OA\Response(
+ *     response=422,
+ *     description="Validation error",
+ *     @OA\JsonContent(type="object")
+ *   )
+ * )
+ */
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -40,7 +72,37 @@ class AuthController extends Controller
             'token_type' => 'Bearer'
         ]);
     }
-
+/**
+ * @OA\Post(
+ *   path="/api/login",
+ *   summary="Login and get access token",
+ *   tags={"Auth"},
+ *   @OA\RequestBody(
+ *     required=true,
+ *     @OA\JsonContent(
+ *       required={"email","password"},
+ *       @OA\Property(property="email", type="string", example="tijana@example.com"),
+ *       @OA\Property(property="password", type="string", example="secret123")
+ *     )
+ *   ),
+ *   @OA\Response(
+ *     response=200,
+ *     description="Logged in (token returned)",
+ *     @OA\JsonContent(
+ *       @OA\Property(property="message", type="string", example="Tijana logged in"),
+ *       @OA\Property(property="access_token", type="string", example="1|someSanctumTokenHere"),
+ *       @OA\Property(property="token_type", type="string", example="Bearer")
+ *     )
+ *   ),
+ *   @OA\Response(
+ *     response=401,
+ *     description="Wrong credentials",
+ *     @OA\JsonContent(
+ *       @OA\Property(property="message", type="string", example="Wrong credentials")
+ *     )
+ *   )
+ * )
+ */
     public function login(Request $request)
     {
         if (!Auth::attempt($request->only('email', 'password'))) {
@@ -57,7 +119,22 @@ class AuthController extends Controller
             'token_type' => 'Bearer'
         ]);
     }
-
+/**
+ * @OA\Post(
+ *   path="/api/logout",
+ *   summary="Logout (revoke current token)",
+ *   tags={"Auth"},
+ *   security={{"bearerAuth":{}}},
+ *   @OA\Response(
+ *     response=200,
+ *     description="Logged out",
+ *     @OA\JsonContent(
+ *       @OA\Property(property="message", type="string", example="You have successfully logged out.")
+ *     )
+ *   ),
+ *   @OA\Response(response=401, description="Unauthorized")
+ * )
+ */
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()?->delete();
@@ -66,6 +143,29 @@ class AuthController extends Controller
             'message' => 'You have successfully logged out.'
         ];
     }
+
+    /**
+ * @OA\Get(
+ *   path="/api/users/search",
+ *   summary="Search users by name (excluding current user)",
+ *   tags={"Users"},
+ *   security={{"bearerAuth":{}}},
+ *   @OA\Parameter(
+ *     name="query",
+ *     in="query",
+ *     required=false,
+ *     description="Search query (part of name)",
+ *     @OA\Schema(type="string"),
+ *     example="Tijana"
+ *   ),
+ *   @OA\Response(
+ *     response=200,
+ *     description="OK",
+ *     @OA\JsonContent(type="array", @OA\Items(type="object"))
+ *   ),
+ *   @OA\Response(response=401, description="Unauthorized")
+ * )
+ */
     public function searchUsers(Request $request)
     {
         $query = $request->query('query', '');

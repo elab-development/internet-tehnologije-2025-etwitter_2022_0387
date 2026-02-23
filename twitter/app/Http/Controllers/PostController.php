@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use OpenApi\Annotations as OA;
 use App\Http\Resources\PostResource;
 use App\Models\Post;
 use Illuminate\Http\Request;
@@ -10,8 +11,72 @@ use Illuminate\Support\Facades\Cache;
 class PostController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     */
+     * @OA\Get(
+     *   path="/api/posts",
+     *   summary="Get posts feed (admin: all posts, user: following + own posts)",
+     *   tags={"Posts"},
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Parameter(
+     *     name="per_page",
+     *     in="query",
+     *     required=false,
+     *     description="Number of items per page (1-100). Default: 10",
+     *     @OA\Schema(type="integer", minimum=1, maximum=100),
+     *     example=10
+     *   ),
+     *   @OA\Parameter(
+     *     name="page",
+     *     in="query",
+     *     required=false,
+     *     description="Page number. Default: 1",
+     *     @OA\Schema(type="integer", minimum=1),
+     *     example=1
+     *   ),
+     *   @OA\Parameter(
+     *     name="sort_by",
+     *     in="query",
+     *     required=false,
+     *     description="Sort field (created_at or content). Default: created_at",
+     *     @OA\Schema(type="string", enum={"created_at","content"}),
+     *     example="created_at"
+     *   ),
+     *   @OA\Parameter(
+     *     name="sort_dir",
+     *     in="query",
+     *     required=false,
+     *     description="Sort direction (asc/desc). Default: desc",
+     *     @OA\Schema(type="string", enum={"asc","desc"}),
+     *     example="desc"
+     *   ),
+     *   @OA\Parameter(
+     *     name="user_id",
+     *     in="query",
+     *     required=false,
+     *     description="Filter by user id (only allowed if admin or followed user)",
+     *     @OA\Schema(type="integer"),
+     *     example=5
+     *   ),
+     *   @OA\Parameter(
+     *     name="ttl",
+     *     in="query",
+     *     required=false,
+     *     description="Cache TTL in seconds (5-300). Default: 30",
+     *     @OA\Schema(type="integer", minimum=5, maximum=300),
+     *     example=30
+     *   ),
+     *   @OA\Response(
+     *     response=200,
+     *     description="OK",
+     *     @OA\JsonContent(
+     *       @OA\Property(property="posts", type="array", @OA\Items(type="object")),
+     *       @OA\Property(property="per_page", type="integer", example=10),
+     *       @OA\Property(property="page", type="integer", example=1),
+     *       @OA\Property(property="total", type="integer", example=42)
+     *     )
+     *   ),
+     *   @OA\Response(response=401, description="Unauthorized")
+     * )
+     */ 
     public function index(Request $request)
     {
         $auth = $request->user();
@@ -98,7 +163,30 @@ class PostController extends Controller
     }
 
     /**
-     * Store a newly created resource.
+     * @OA\Post(
+     *   path="/api/posts",
+     *   summary="Create a post (non-admin only)",
+     *   tags={"Posts"},
+     *   security={{"bearerAuth":{}}},
+     *   @OA\RequestBody(
+     *     required=true,
+     *     @OA\JsonContent(
+     *       required={"content"},
+     *       @OA\Property(property="content", type="string", maxLength=280, example="Hello!")
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response=200,
+     *     description="OK",
+     *     @OA\JsonContent(
+     *       @OA\Property(property="message", type="string", example="Post created successfully"),
+     *       @OA\Property(property="post", type="object")
+     *     )
+     *   ),
+     *   @OA\Response(response=401, description="Unauthorized"),
+     *   @OA\Response(response=403, description="Admins cannot create posts"),
+     *   @OA\Response(response=422, description="Validation error")
+     * )
      */
     public function store(Request $request)
     {
@@ -124,8 +212,40 @@ class PostController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource.
+        /**
+     * @OA\Put(
+     *   path="/api/posts/{post}",
+     *   summary="Update a post (owner only, admin forbidden)",
+     *   tags={"Posts"},
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Parameter(
+     *     name="post",
+     *     in="path",
+     *     required=true,
+     *     description="Post ID",
+     *     @OA\Schema(type="integer"),
+     *     example=1
+     *   ),
+     *   @OA\RequestBody(
+     *     required=true,
+     *     @OA\JsonContent(
+     *       required={"content"},
+     *       @OA\Property(property="content", type="string", maxLength=280, example="Updated content")
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response=200,
+     *     description="Updated",
+     *     @OA\JsonContent(
+     *       @OA\Property(property="message", type="string", example="Post updated"),
+     *       @OA\Property(property="post", type="object")
+     *     )
+     *   ),
+     *   @OA\Response(response=401, description="Unauthorized"),
+     *   @OA\Response(response=403, description="Forbidden"),
+     *   @OA\Response(response=404, description="Post not found"),
+     *   @OA\Response(response=422, description="Validation error")
+     * )
      */
     public function update(Request $request, Post $post)
     {
@@ -148,8 +268,43 @@ class PostController extends Controller
         return response()->json(['message' => 'Post updated', 'post' => new PostResource($post)]);
     }
 
-    /**
-     * Remove the specified resource.
+        /**
+     * @OA\Delete(
+     *   path="/api/posts/{post}",
+     *   summary="Delete a post (owner or admin)",
+     *   tags={"Posts"},
+     *   security={{"bearerAuth":{}}},
+     *   @OA\Parameter(
+     *     name="post",
+     *     in="path",
+     *     required=true,
+     *     description="Post ID",
+     *     @OA\Schema(type="integer"),
+     *     example=1
+     *   ),
+     *   @OA\Response(
+     *     response=200,
+     *     description="Post deleted",
+     *     @OA\JsonContent(
+     *       @OA\Property(property="message", type="string", example="Post deleted")
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response=403,
+     *     description="Forbidden (not owner and not admin)",
+     *     @OA\JsonContent(
+     *       @OA\Property(property="message", type="string", example="Forbidden")
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response=401,
+     *     description="Unauthorized"
+     *   ),
+     *   @OA\Response(
+     *     response=404,
+     *     description="Post not found"
+     *   )
+     * )
      */
     public function destroy(Request $request, Post $post)
     {
