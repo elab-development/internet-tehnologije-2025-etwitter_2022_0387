@@ -195,6 +195,13 @@ class PostController extends Controller
             return response()->json(['message' => 'Admins cannot create posts'], 403);
         }
 
+         if (strlen($request->input('content')) > 280) {
+            return response()->json([
+                'message' => 'The content field must not exceed 280 characters.',
+                'errors' => ['content' => ['The content field must not exceed 280 characters.']]
+            ], 422);
+        }
+
         $data = $request->validate([
             'content' => ['required', 'string', 'max:280'],
         ]);
