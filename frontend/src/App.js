@@ -7,7 +7,7 @@ import Profile from './pages/profile/Profile';
 import Signup from './pages/signup/Signup';
 import Navbar from './components/navbar/Navbar'
 import TeamFooter from './components/footer/TeamFooter';
-
+import TwitterStats from './TwitterStats';
 
 function AppContent() {
   const location = useLocation();
@@ -21,6 +21,7 @@ function AppContent() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/stats" element={<TwitterStats />} />
         </Routes>
       </main>
       

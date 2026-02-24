@@ -6,6 +6,8 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\FollowController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\LikeController;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -19,6 +21,32 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+Route::get('/stats/tweets-per-user', function () {
+    try {
+        // PROVERA: Koristimo 'posts' umesto 'tweets' jer se tako zove tvoj resurs
+        $stats = DB::table('users')
+            ->leftJoin('posts', 'users.id', '=', 'posts.user_id')
+            ->select('users.name', DB::raw('count(posts.id) as tweets_count'))
+            ->groupBy('users.id', 'users.name')
+            ->get();
+
+        $result = [['Korisnik', 'Broj Objava']];
+
+        foreach ($stats as $row) {
+            // Dodajemo samo ako korisnik ima bar jednu objavu da grafikon bude zanimljiviji
+            $result[] = [$row->name, (int)$row->tweets_count];
+        }
+
+        return response()->json($result);
+
+    } catch (\Exception $e) {
+        // Ako tabela 'posts' ipak nije pravo ime, ovde ćemo videti šta je problem
+        return response()->json([
+            ['Greška', 'Poruka'], 
+            ['Database Error', 'Proveri naziv tabele u bazi. ' . $e->getMessage()]
+        ], 200);
+    }
+});
 Route::get('/team', function () {
         return [
             ['id' => 1, 'name' => 'Nađa Mladenović', 'github' => 'https://github.com/nadjamladenovic'],
