@@ -3,16 +3,22 @@
 E-Twitter je jednostavna Laravel aplikacija koja modeluje osnovne funkcionalnosti društvene mreže nalik Twitter-u.
 
 ## Tehnologije i pokretanje projekta:
-#### Laravel Backend
-1. Instaliranje [VS Code](https://code.visualstudio.com/download)  
+#### Laravel Backend i React Frontend
+1. Instaliranje [VS Code](https://code.visualstudio.com/download)
 3. Instaliranje [PHP](https://www.php.net/downloads) (>= 8.1)
 4. Instaliranje [Composer](https://getcomposer.org/download/)
 5. git clone https://github.com/elab-development/serverske-veb-tehnologije-2024-25-drustvenamreza_2022_0387.git
 6. Instaliranje zavisnosti u root folderu Laravel projekta: composer install
-7. Kopiranje šablonskog u stvarni .env fajl: cp .env.example .env
-8. Generisanje aplikacionog ključa: php artisan key:generate
-9. Pokretanje migracija i seed podataka: php artisan migrate --seed
-10. Startovanje lokalnog servera: php artisan serve
+7.  Instaliranje zavisnosti za frontend u drugom terminalu: npm install
+8. Kopiranje šablonskog u stvarni .env fajl na backendu: cp .env.example .env
+9. Generisanje aplikacionog ključa: php artisan key:generate
+10. Pokretanje migracija i seed podataka: php artisan migrate --seed
+11. Startovanje lokalnog servera: php artisan serve
+
+# Docker
+1. Pokretanje kontejnera: docker compose up -d
+2. Instalacija frontend zavisnosti: docker compose exec twitter npm install
+3. Pokretanje React-a: docker compose exec twitter npm run dev
 
 # Funkcionalnosti
 Sistem koristi četiri ključna modela: User, Post, Comment i Follow. 
