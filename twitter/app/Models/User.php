@@ -82,6 +82,11 @@ class User extends Authenticatable
         return $this->role === 'admin';
     }
 
+    public function isModerator(): bool
+    {
+    return $this->role === 'moderator';
+    }
+
     public function isFollowing(User $user): bool
     {
         return $this->following()->where('users.id', $user->id)->exists();

@@ -18,6 +18,11 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@mail.com',
         ]);
 
+        User::factory()->moderator()->create([
+            'name' => 'Moderator',
+            'email' => 'moderator2@mail.com',
+        ]);
+
         User::factory(20)->regular()->create();
 
         $this->call([
@@ -25,5 +30,7 @@ class DatabaseSeeder extends Seeder
             PostSeeder::class,
             CommentSeeder::class,
         ]);
+
+        
     }
 }

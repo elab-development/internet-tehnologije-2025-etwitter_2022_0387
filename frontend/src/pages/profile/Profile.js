@@ -51,6 +51,9 @@ function Profile() {
       try {
         const response = await api.get('/user');
         setUser(response.data);
+        localStorage.setItem('user', JSON.stringify(response.data));
+        localStorage.setItem('user_id', response.data.id);
+        localStorage.setItem('user_role', response.data.role);
 
         const postsResponse = await api.get(`/posts?user_id=${response.data.id}`);
         setPosts(postsResponse.data.posts || []);

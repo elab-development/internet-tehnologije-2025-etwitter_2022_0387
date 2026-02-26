@@ -18,8 +18,14 @@ function Login() {
 
       // 1. Koristimo access_token (kako je definisano u tvom AuthControlleru)
       const token = response.data.access_token; 
-      localStorage.setItem('token', token);
+     // localStorage.setItem('token', token);
+      localStorage.setItem('token', response.data.access_token);
 
+      if (response.data.user) {
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        localStorage.setItem('user_id', response.data.user.id);
+        localStorage.setItem('user_role', response.data.user.role);
+      }
       // 2. Čuvamo podatke o korisniku da bi Profil mogao odmah da ih učita
       // Tvoj kontroler vraća korisnika u response.data (ili response.data.user zavisi od API-ja)
       // Ako tvoj profil koristi api.get('/user'), ovo je super 'keš' za brzinu

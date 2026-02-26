@@ -6,6 +6,8 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\FollowController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\LikeController;
+use App\Http\Controllers\ModeratorController;
+
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -93,5 +95,17 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     Route::get('/admin/stats/hn-tags', [AdminExternalStatsController::class, 'hnPopularKeywords']);
     Route::get('/admin/stats/guardian-tags', [AdminExternalStatsController::class, 'guardianPopularTags']);
+
+    // Report post
+    Route::post('/posts/{post}/report', [PostController::class, 'report']);
+
+    // Moderator routes
+    Route::middleware(['role:moderator'])->group(function () {
+        Route::get('/moderator/reported-posts', [ModeratorController::class, 'reportedPosts']);
+        Route::post('/moderator/posts/{post}/approve-delete', [ModeratorController::class, 'approveDelete']);
+        Route::post('/moderator/posts/{post}/dismiss', [ModeratorController::class, 'dismiss']);
+    });
+
+    
     
 });

@@ -52,9 +52,13 @@ function Home() {
     };
 
     const fetchCurrentUser = async () => {
+        
         try {
             const response = await api.get('/user');
             setCurrentUser(response.data);
+            localStorage.setItem('user', JSON.stringify(response.data));
+            localStorage.setItem('user_id', response.data.id);
+            
             localStorage.setItem('user_role', response.data.role);
         } catch (error) {
             console.error("Greška pri preuzimanju korisnika:", error);

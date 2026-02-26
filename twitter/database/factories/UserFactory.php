@@ -48,6 +48,10 @@ class UserFactory extends Factory
     {
     return $this->state(fn ()=>['role'=>'admin']);
     }
+    public function moderator(): static
+    {
+    return $this->state(fn () => ['role' => 'moderator']);
+    }
 
     public function regular(): static{
         return $this->state(fn()=>['role'=>'user']);

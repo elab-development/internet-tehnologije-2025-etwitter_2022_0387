@@ -10,13 +10,16 @@ function TweetCard({
   author,
   postId,
   onDelete,
-  currentUserId
+  currentUserId,
+   compact = false,
 }) {
   const storageId = localStorage.getItem('user_id');
   const userRole = localStorage.getItem('user_role'); // Pretpostavka da čuvaš rolu u localStorage
   
   const mojId = currentUserId || storageId;
   const isAdmin = userRole === 'admin';
+
+  const isModerator = userRole === 'moderator';
 
   const isMyPost = mojId && Number(mojId) === Number(authorId);
 
@@ -100,6 +103,17 @@ function TweetCard({
     }
   };
 
+  const handleReport = async () => {
+  if (!window.confirm('Da li želite da prijavite ovu objavu?')) return;
+
+  try {
+    const res = await api.post(`/posts/${postId}/report`);
+    alert(res.data?.message || 'Objava je prijavljena.');
+  } catch (err) {
+    alert(err.response?.data?.message || 'Greška pri prijavi objave.');
+  }
+};
+
   return (
     <div className="cyber-card">
       <div className="card-header">
@@ -152,54 +166,69 @@ function TweetCard({
       </div>
 
       <div className="card-footer">
-        {/* INTERAKCIJE: Sakrivamo ako je korisnik ADMIN */}
-        {!isAdmin && (
-          <>
-            <button className="action-btn">Like</button>
-            <button className="action-btn">Reply</button>
-            <button className="action-btn">Share</button>
-          </>
-        )}
+        {!compact && (
+  <div className="card-footer">
+    {/* INTERAKCIJE: Sakrivamo ako je korisnik ADMIN */}
+    {!isAdmin && (
+      <>
+        <button className="action-btn">Like</button>
+        <button className="action-btn">Reply</button>
+        <button className="action-btn">Share</button>
 
-        {/* FOLLOW: Samo za obične korisnike */}
-        {canFollowThisAuthor && (
+        {/* REPORT: samo obican user i nije moj post */}
+        {!isModerator && !isMyPost && (
           <button
             className="action-btn"
-            onClick={handleToggleFollow}
-            style={{
-              marginLeft: isAdmin ? 'auto' : '10px',
-              border: '1px solid #7fff7f',
-              padding: '2px 8px',
-              borderRadius: '4px'
-            }}
+            onClick={handleReport}
+            style={{ border: '1px solid #ffb84d', color: '#ffb84d' }}
           >
-            {isFollowing ? 'Unfollow' : 'Follow'}
+            Report
+          </button>
+        )}
+      </>
+    )}
+
+    {/* FOLLOW: Samo za obične korisnike */}
+    {canFollowThisAuthor && (
+      <button
+        className="action-btn"
+        onClick={handleToggleFollow}
+        style={{
+          marginLeft: isAdmin ? 'auto' : '10px',
+          border: '1px solid #7fff7f',
+          padding: '2px 8px',
+          borderRadius: '4px'
+        }}
+      >
+        {isFollowing ? 'Unfollow' : 'Follow'}
+      </button>
+    )}
+
+    {/* DELETE LOGIKA: Prikazujemo ako je MOJ post ILI ako sam ADMIN */}
+    {(isMyPost || isAdmin) && (
+      <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px' }}>
+        {isMyPost && !isAdmin && (
+          <button
+            className="action-btn edit-btn"
+            onClick={handleEditClick}
+            style={{ color: '#4da6ff', border: '1px solid #4da6ff', padding: '2px 8px', borderRadius: '4px' }}
+          >
+            Edit
           </button>
         )}
 
-        {/* DELETE LOGIKA: Prikazujemo ako je MOJ post ILI ako sam ADMIN */}
-        {(isMyPost || isAdmin) && (
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px' }}>
-            {/* Edit dozvoljavamo samo vlasniku, NE adminu */}
-            {isMyPost && !isAdmin && (
-              <button
-                className="action-btn edit-btn"
-                onClick={handleEditClick}
-                style={{ color: '#4da6ff', border: '1px solid #4da6ff', padding: '2px 8px', borderRadius: '4px' }}
-              >
-                Edit
-              </button>
-            )}
-            
-            <button
-              className="action-btn delete-btn"
-              onClick={() => onDelete(postId)}
-              style={{ color: '#ff4d4d', fontWeight: 'bold', border: '1px solid #ff4d4d', padding: '2px 8px', borderRadius: '4px' }}
-            >
-              Delete
-            </button>
-          </div>
-        )}
+        <button
+          className="action-btn delete-btn"
+          onClick={() => onDelete(postId)}
+          style={{ color: '#ff4d4d', fontWeight: 'bold', border: '1px solid #ff4d4d', padding: '2px 8px', borderRadius: '4px' }}
+        >
+          Delete
+        </button>
+      </div>
+    )}
+  </div>
+)}
+        
       </div>
     </div>
   );

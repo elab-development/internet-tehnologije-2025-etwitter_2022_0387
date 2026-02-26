@@ -13,6 +13,7 @@ function Navbar() {
   const userString = localStorage.getItem('user');
   const currentUser = userString ? JSON.parse(userString) : null;
   const isAdmin = currentUser?.role === 'admin';
+  const isModerator = currentUser?.role === 'moderator';
 
   const handleSearch = async (e) => {
     const value = e.target.value;
@@ -88,11 +89,20 @@ function Navbar() {
       )}
 
       <div className="nav-menu">
-        <Link to="/" className="menu-item">Početna</Link>
+        {!token && (
+          <>
+            <Link to="/" className="menu-item">Početna</Link>
+            <Link to="/login" className="menu-item">Prijava</Link>
+            <Link to="/signup" className="menu-item">Registracija</Link>
+          </>
+        )}
+
+        {/* <Link to="/" className="menu-item">Početna</Link> */}
         
-        {token ? (
+        {/* {token ? (
           <>
             <Link to="/profile" className="menu-item">Profil</Link>
+
             <span 
               className="menu-item" 
               style={{cursor: 'pointer', color: '#ff4444'}}
@@ -109,7 +119,40 @@ function Navbar() {
             <Link to="/login" className="menu-item">Prijava</Link>
             <Link to="/signup" className="menu-item">Registracija</Link>
           </>
-        )}
+        )} */}
+        {token && isModerator && (
+        <>
+          <Link to="/moderator" className="menu-item">Moderacija</Link>
+          <span
+            className="menu-item"
+            style={{ cursor: 'pointer', color: '#ff4444' }}
+            onClick={() => {
+              localStorage.clear();
+              window.location.href = '/login';
+            }}
+          >
+            Odjavi se
+          </span>
+        </>
+      )}
+      {token && !isModerator && (
+        <>
+          <Link to="/" className="menu-item">Početna</Link>
+          <Link to="/profile" className="menu-item">Profil</Link>
+          
+          <span
+            className="menu-item"
+            style={{ cursor: 'pointer', color: '#ff4444' }}
+            onClick={() => {
+              localStorage.clear();
+              window.location.href = '/login';
+            }}
+          >
+            Odjavi se
+          </span>
+        </>
+      )}
+
       </div>
     </nav>
   );

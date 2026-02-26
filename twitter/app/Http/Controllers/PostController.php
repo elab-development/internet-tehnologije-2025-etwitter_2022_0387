@@ -7,6 +7,7 @@ use App\Http\Resources\PostResource;
 use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use App\Models\PostReport;
 
 class PostController extends Controller
 {
@@ -331,4 +332,37 @@ class PostController extends Controller
 
         return response()->json(['message' => 'Post deleted'], 200);
     }
+
+
+    public function report(Request $request, Post $post)
+{
+    $user = $request->user();
+
+    if (!$user) {
+        return response()->json(['message' => 'Unauthorized'], 401);
+    }
+
+    // Admin i moderator obično ne reportuju
+    if ($user->role === 'admin' || $user->role === 'moderator') {
+        return response()->json(['message' => 'Forbidden'], 403);
+    }
+
+    // da ne spamuje 100 puta isti user isti post
+    $already = PostReport::where('post_id', $post->id)
+        ->where('reporter_id', $user->id)
+        ->where('status', 'pending')
+        ->exists();
+
+    if ($already) {
+        return response()->json(['message' => 'Već ste prijavili ovu objavu.'], 409);
+    }
+
+    PostReport::create([
+        'post_id' => $post->id,
+        'reporter_id' => $user->id,
+        'status' => 'pending',
+    ]);
+
+    return response()->json(['message' => 'Objava je prijavljena.'], 200);
+}
 }
