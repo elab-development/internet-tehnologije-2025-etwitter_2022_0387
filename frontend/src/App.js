@@ -42,7 +42,7 @@ function AppContent() {
             element={isModerator ? <Navigate to="/moderator" replace /> : <Profile />}
           />
 
-          {/* <Route path="/stats" element={<TwitterStats />} /> */}
+         <Route path="/stats" element={<TwitterStats />} /> 
         
           {/* MODERATOR: samo ulogovan moderator */}
           <Route
